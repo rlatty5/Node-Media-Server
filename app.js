@@ -34,7 +34,7 @@ const config = {
 
 //login to API Service
 
-fetch('http://localhost:3000/v1/user/login', {
+fetch('http://localhost:3001/v1/user/login', {
   method: 'POST',
   body: JSON.stringify({
     email: devCredentials["email"],
@@ -79,7 +79,25 @@ response.json().then(function (data) {
     //update user document to show isLive=true
     //update stream document with current stream url
     let streamKey = StreamPath.split('/')[2]
-    fetch('http://localhost:3000/v1/stream/updateStreamServer', {
+
+    fetch('http://localhost:3001/v1/stream/updateStreamStatus', {
+      method: 'POST',
+      body: JSON.stringify({
+        "streamKey": streamKey,
+        "streamServer": os.hostname(),
+        "isLive": true
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      }
+    }).then(function (response) {
+      console.log(response)
+    }).catch(function (error) {
+      console.log(error)
+    })
+
+    fetch('http://localhost:3001/v1/stream/updateStreamServer', {
       method: 'POST',
       body: JSON.stringify({
         "streamKey": streamKey,
@@ -102,11 +120,9 @@ response.json().then(function (data) {
 
   nms.on('donePublish', (id, StreamPath, args) => {
     console.log('[NodeEvent on donePublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
-    //find document based on streamKey
-    //update user document to show isLive=false
-    //update stream document with nil
+
     let streamKey = StreamPath.split('/')[2]
-    fetch('http://localhost:3000/v1/stream/updateStreamServer', {
+    fetch('http://localhost:3001/v1/stream/updateStreamStatus', {
       method: 'POST',
       body: JSON.stringify({
         "streamKey": streamKey,
@@ -122,6 +138,28 @@ response.json().then(function (data) {
     }).catch(function (error) {
       console.log(error)
     })
+
+    //find document based on streamKey
+    //update user document to show isLive=false
+    //update stream document with nil
+    fetch('http://localhost:3001/v1/stream/updateStreamServer', {
+      method: 'POST',
+      body: JSON.stringify({
+        "streamKey": streamKey,
+        "streamServer": os.hostname(),
+        "isLive": false
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      }
+    }).then(function (response) {
+      console.log(response)
+    }).catch(function (error) {
+      console.log(error)
+    })
+
+
   });
 
   nms.on('prePlay', (id, StreamPath, args) => {
