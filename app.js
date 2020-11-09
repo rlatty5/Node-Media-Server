@@ -109,9 +109,7 @@ response.json().then(function (data) {
         'Authorization': 'Bearer ' + token
       }
     }).then(function (response) {
-      response.json().then(function (data) {
-        console.log(data)
-      })
+      console.log(response)
 
     }).catch(function (error) {
       console.log(error)
