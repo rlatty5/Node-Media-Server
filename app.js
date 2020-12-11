@@ -85,7 +85,9 @@ response.json().then(function (data) {
       body: JSON.stringify({
         "streamKey": streamKey,
         "streamServer": os.hostname(),
-        "isLive": true
+        "isLive": true,
+        "streamURL": '' +
+            ''
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -97,23 +99,23 @@ response.json().then(function (data) {
       console.log(error)
     })
 
-    fetch('http://localhost:3001/v1/stream/updateStreamServer', {
-      method: 'POST',
-      body: JSON.stringify({
-        "streamKey": streamKey,
-        "streamServer": 'https://' + os.hostname() + '/api.tuter.io',
-        "isLive": true
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      }
-    }).then(function (response) {
-      console.log(response)
-
-    }).catch(function (error) {
-      console.log(error)
-    })
+    // fetch('http://localhost:3001/v1/stream/updateStreamServer', {
+    //   method: 'POST',
+    //   body: JSON.stringify({
+    //     "streamKey": streamKey,
+    //     "streamServer": 'https://' + os.hostname() + '/api.tuter.io',
+    //     "isLive": true
+    //   }),
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': 'Bearer ' + token
+    //   }
+    // }).then(function (response) {
+    //   console.log(response)
+    //
+    // }).catch(function (error) {
+    //   console.log(error)
+    // })
   });
 
   nms.on('donePublish', (id, StreamPath, args) => {
@@ -137,27 +139,25 @@ response.json().then(function (data) {
       console.log(error)
     })
 
-    //find document based on streamKey
-    //update user document to show isLive=false
-    //update stream document with nil
-    fetch('http://localhost:3001/v1/stream/updateStreamServer', {
-      method: 'POST',
-      body: JSON.stringify({
-        "streamKey": streamKey,
-        "streamServer": os.hostname(),
-        "isLive": false
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      }
-    }).then(function (response) {
-      console.log(response)
-    }).catch(function (error) {
-      console.log(error)
-    })
-
-
+    // //find document based on streamKey
+    // //update user document to show isLive=false
+    // //update stream document with nil
+    // fetch('http://localhost:3001/v1/stream/updateStreamServer', {
+    //   method: 'POST',
+    //   body: JSON.stringify({
+    //     "streamKey": streamKey,
+    //     "streamServer": os.hostname(),
+    //     "isLive": false
+    //   }),
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': 'Bearer ' + token
+    //   }
+    // }).then(function (response) {
+    //   console.log(response)
+    // }).catch(function (error) {
+    //   console.log(error)
+    // }) `
   });
 
   nms.on('prePlay', (id, StreamPath, args) => {
