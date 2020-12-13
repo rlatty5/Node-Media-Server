@@ -13,6 +13,7 @@ const WebSocket = require('ws');
 const Express = require('express');
 const bodyParser = require('body-parser');
 const basicAuth = require('basic-auth-connect');
+const fetch = require("node-fetch");
 const NodeFlvSession = require('./node_flv_session');
 const HTTP_PORT = 80;
 const HTTPS_PORT = 443;
@@ -29,6 +30,7 @@ class NodeHttpServer {
     this.port = config.http.port || HTTP_PORT;
     this.mediaroot = config.http.mediaroot || HTTP_MEDIAROOT;
     this.config = config;
+    let token = config.token;
 
     let app = Express();
 
@@ -43,8 +45,32 @@ class NodeHttpServer {
     });
 
     app.get('*.flv', (req, res, next) => {
-      req.nmsConnectionType = 'http';
-      this.onConnect(req, res);
+      let url = req.url
+      if(url.includes('user')) {
+       let userId =  (url.split('/').slice(-1)[0]).replace(".flv", "")
+        let requestFields = []
+        requestFields.push('streamKey')
+        fetch(`http://localhost:3001/v1/user/retrieveUserDataByField?userId=${userId}&requestFields=${requestFields}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          }
+        }).then(function (response) {
+          response.json().then(function (data) {
+            let streamKey = data['streamKey']
+            req.url = '/livetuter/' + streamKey + '.flv'
+            res.redirect(307, req.url);
+
+          })
+        }).catch(function (error) {
+          console.log(error)
+        })
+      } else {
+        req.nmsConnectionType = 'http';
+        this.onConnect(req, res);
+      }
+
     });
 
     let adminEntry = path.join(__dirname + '/public/admin/index.html');

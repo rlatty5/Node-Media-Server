@@ -48,6 +48,7 @@ response.json().then(function (data) {
   console.log(data)
   console.log(os.hostname())
   let token = data.token
+  config.token = token
   let nms = new NodeMediaServer(config)
   nms.run();
 
@@ -79,12 +80,12 @@ response.json().then(function (data) {
     //update user document to show isLive=true
     //update stream document with current stream url
     let streamKey = StreamPath.split('/')[2]
-
-    fetch('http://localhost:3001/v1/stream/updateStreamStatus', {
+//url = "http://localhost:8080/livetuter/" + this.props.tuterConfig.streamConfig.streamKey + ".flv"
+    fetch('http://localhost:/v1/stream/updateStreamStatus', {
       method: 'POST',
       body: JSON.stringify({
         "streamKey": streamKey,
-        "streamServer": os.hostname(),
+        "streamServer": 'http://localhost:8080',
         "isLive": true,
         "streamURL": '' +
             ''
@@ -126,7 +127,7 @@ response.json().then(function (data) {
       method: 'POST',
       body: JSON.stringify({
         "streamKey": streamKey,
-        "streamServer": os.hostname(),
+        "streamServer": 'http://localhost:8080',//ROMO TODO: os.hostname()
         "isLive": false
       }),
       headers: {
