@@ -22,6 +22,16 @@ const config = {
     key: './privatekey.pem',
     cert: './certificate.pem',
   },
+  trans: {
+    ffmpeg: '/usr/local/bin/ffmpeg',
+    tasks: [
+      {
+        app: 'live',
+        mp4: true,
+        mp4Flags: '[movflags=frag_keyframe+empty_moov]',
+      }
+    ]
+  },
   auth: {
     api: true,
     api_user: 'admin',
