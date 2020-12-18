@@ -65,6 +65,7 @@ class NodeTransServer {
       conf.streamApp = app;
       conf.streamName = name;
       conf.args = args;
+      conf.token = this.config.token;
       if (app === conf.app) {
         let session = new NodeTransSession(conf);
         this.transSessions.set(id, session);
@@ -80,6 +81,8 @@ class NodeTransServer {
     let session = this.transSessions.get(id);
     if (session) {
       session.end();
+
+      //ROMO TODO: Upload to CDN
     }
   }
 }

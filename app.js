@@ -2,6 +2,8 @@ const devCredentials = require('./secrets/devCredentials');
 const NodeMediaServer = require('./');
 const fetch = require("node-fetch");
 const os = require("os");
+const MediaRoot = process.env.MEDIA_ROOT || './media'
+const AUTHSECRET = process.env.AUTH_SECRET || 'nodemedia2017privatekey'
 const config = {
   rtmp: {
     port: 1935,
@@ -12,7 +14,7 @@ const config = {
   },
   http: {
     port: 8080,
-    mediaroot: './media',
+    mediaroot: MediaRoot,
     webroot: './www',
     allow_origin: '*',
     api: true
@@ -26,7 +28,7 @@ const config = {
     ffmpeg: '/usr/local/bin/ffmpeg',
     tasks: [
       {
-        app: 'live',
+        app: 'livetuter',
         mp4: true,
         mp4Flags: '[movflags=frag_keyframe+empty_moov]',
       }
@@ -38,7 +40,7 @@ const config = {
     api_pass: 'admin',
     play: false,
     publish: false,
-    secret: 'nodemedia2017privatekey'
+    secret: AUTHSECRET
   },
 };
 
@@ -81,7 +83,7 @@ response.json().then(function (data) {
     // let session = nms.getSession(id);
     // session.reject();
   });
-
+//https://msdevopsdude.com/2020/07/07/Setting-up-a-custom-RTMP-endpoint-for-capturing-live-video-stream/
   nms.on('postPublish', (id, StreamPath, args) => {
     console.log('[NodeEvent on postPublish]', `id=${id} StreamPath=${StreamPath} args=${JSON.stringify(args)}`);
     //send server url to stream document
@@ -91,7 +93,7 @@ response.json().then(function (data) {
     //update stream document with current stream url
     let streamKey = StreamPath.split('/')[2]
 //url = "http://localhost:8080/livetuter/" + this.props.tuterConfig.streamConfig.streamKey + ".flv"
-    fetch('http://localhost:/v1/stream/updateStreamStatus', {
+    fetch('http://localhost:3001/v1/stream/updateStreamStatus', {
       method: 'POST',
       body: JSON.stringify({
         "streamKey": streamKey,

@@ -10,6 +10,8 @@ const { spawn } = require('child_process');
 const dateFormat = require('dateformat');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
+const FormData = require('form-data');
+const fetch = require("node-fetch");
 
 class NodeTransSession extends EventEmitter {
   constructor(conf) {
@@ -78,9 +80,31 @@ class NodeTransSession extends EventEmitter {
     this.ffmpeg_exec.on('close', (code) => {
       Logger.log('[Transmuxing end] ' + this.conf.streamPath);
       this.emit('end');
+      //ROMO TODO: send file to Tuter API
+      let token = this.conf.token
       fs.readdir(ouPath, function (err, files) {
         if (!err) {
           files.forEach((filename) => {
+            const data = new FormData();
+            data.append("upload", fs.createReadStream(ouPath + "/" + filename));
+            fetch('http://localhost:3001/v1/course-content/uploadStreamArchive', {
+              method: 'POST',
+              body: data,
+              headers: {
+                'Authorization': 'Bearer ' + token
+              }
+            }).then(function (response) {
+              response.json().then(function (data) {
+                console.log(response)
+                if(response.status == 200) {
+                  fs.unlinkSync(ouPath + '/' + filename);
+                  
+                }
+              })
+            }).catch(function (error) {
+              console.log(error)
+            })
+
             if (filename.endsWith('.ts')
               || filename.endsWith('.m3u8')
               || filename.endsWith('.mpd')

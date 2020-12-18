@@ -61,7 +61,6 @@ class NodeHttpServer {
             let streamKey = data['streamKey']
             req.url = '/livetuter/' + streamKey + '.flv'
             res.redirect(307, req.url);
-
           })
         }).catch(function (error) {
           console.log(error)
