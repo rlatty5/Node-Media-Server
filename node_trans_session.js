@@ -76,7 +76,6 @@ class NodeTransSession extends EventEmitter {
     this.ffmpeg_exec.stderr.on('data', (data) => {
       Logger.ffdebug(`FF输出：${data}`);
     });
-
     this.ffmpeg_exec.on('close', (code) => {
       Logger.log('[Transmuxing end] ' + this.conf.streamPath);
       this.emit('end');
@@ -85,8 +84,11 @@ class NodeTransSession extends EventEmitter {
       fs.readdir(ouPath, function (err, files) {
         if (!err) {
           files.forEach((filename) => {
+            let streamKey = ouPath.split('/').slice(-1)[0]
+            let archiveDate = filename.split(".")[0]
             const data = new FormData();
             data.append("upload", fs.createReadStream(ouPath + "/" + filename));
+            data.append("streamKey", streamKey)
             fetch('http://localhost:3001/v1/course-content/uploadStreamArchive', {
               method: 'POST',
               body: data,
@@ -95,10 +97,35 @@ class NodeTransSession extends EventEmitter {
               }
             }).then(function (response) {
               response.json().then(function (data) {
-                console.log(response)
+                console.log(data)
+                let videoURL = data.url
                 if(response.status == 200) {
-                  fs.unlinkSync(ouPath + '/' + filename);
-                  
+                  fetch('http://localhost:3001/v1/course-content/createVideoArchive', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      videoURL: videoURL,
+                      streamKey: streamKey,
+                      streamArchiveDate: archiveDate
+                    }),
+                    headers: {
+                      'Authorization': 'Bearer ' + token,
+                      'Content-Type': 'application/json'
+                    }
+                  }).then(function (response) {
+                    response.json().then(function (data) {
+                      console.log(response)
+                      if(response.status != 200) {
+                        console.log("Video archive process failed: " + data.errorMessage)
+                      } else {
+                        console.log("Video archive process success")
+                      }
+                      fs.unlinkSync(ouPath + '/' + filename);
+                    }).catch(function (error) {
+                      console.log(error)
+                    })
+                  }).catch(function (error) {
+                    console.log(error)
+                  })
                 }
               })
             }).catch(function (error) {
