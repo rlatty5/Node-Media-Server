@@ -99,8 +99,7 @@ response.json().then(function (data) {
         "streamKey": streamKey,
         "streamServer": 'http://localhost:8080',
         "isLive": true,
-        "streamURL": '' +
-            ''
+        "connectionStart": Date.now()
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -140,7 +139,8 @@ response.json().then(function (data) {
       body: JSON.stringify({
         "streamKey": streamKey,
         "streamServer": 'http://localhost:8080',//ROMO TODO: os.hostname()
-        "isLive": false
+        "isLive": false,
+        "connectionTerminated": Date.now()
       }),
       headers: {
         'Content-Type': 'application/json',

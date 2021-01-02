@@ -82,65 +82,82 @@ class NodeTransSession extends EventEmitter {
       //ROMO TODO: send file to Tuter API
       let token = this.conf.token
       fs.readdir(ouPath, function (err, files) {
-        if (!err) {
-          files.forEach((filename) => {
-            let streamKey = ouPath.split('/').slice(-1)[0]
-            let archiveDate = filename.split(".")[0]
-            const data = new FormData();
-            data.append("upload", fs.createReadStream(ouPath + "/" + filename));
-            data.append("streamKey", streamKey)
-            fetch('http://localhost:3001/v1/course-content/uploadStreamArchive', {
-              method: 'POST',
-              body: data,
-              headers: {
-                'Authorization': 'Bearer ' + token
-              }
-            }).then(function (response) {
-              response.json().then(function (data) {
-                console.log(data)
-                let videoURL = data.url
-                if(response.status == 200) {
-                  fetch('http://localhost:3001/v1/course-content/createVideoArchive', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                      videoURL: videoURL,
-                      streamKey: streamKey,
-                      streamArchiveDate: archiveDate
-                    }),
-                    headers: {
-                      'Authorization': 'Bearer ' + token,
-                      'Content-Type': 'application/json'
+        if (!err && files[0]) {
+          let streamKey = ouPath.split('/').slice(-1)[0]
+          let archiveDate = files[0].split(".")[0]
+          const data = new FormData();
+          //ROMO TODO: Trim video from start to end
+          data.append("upload", fs.createReadStream(ouPath + "/" + files[0]));
+          data.append("streamKey", streamKey)
+
+          fs.unlink(ouPath + '/' + files[0], (err) => {
+            if (err) throw err;
+            console.log('successfully deleted ' + ouPath + '/' + files[0]);
+          });
+
+          fetch('http://localhost:3001/v1/course-content/uploadStreamArchive', {
+            method: 'POST',
+            body: data,
+            headers: {
+              'Authorization': 'Bearer ' + token
+            }
+          }).then(function (response) {
+            response.json().then(function (data) {
+              console.log(data)
+              let videoURL = data.url
+              if(response.status == 200) {
+                fetch('http://localhost:3001/v1/course-content/createVideoArchive', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    videoURL: videoURL,
+                    streamKey: streamKey,
+                    streamArchiveDate: archiveDate
+                  }),
+                  headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                  }
+                }).then(function (response) {
+                  response.json().then(function (data) {
+                    console.log(response)
+                    if(response.status != 200) {
+                      console.log("Video archive process failed: " + data.errorMessage)
+                    } else {
+                      console.log("Video archive process success")
                     }
-                  }).then(function (response) {
-                    response.json().then(function (data) {
-                      console.log(response)
-                      if(response.status != 200) {
-                        console.log("Video archive process failed: " + data.errorMessage)
-                      } else {
-                        console.log("Video archive process success")
-                      }
-                      fs.unlinkSync(ouPath + '/' + filename);
-                    }).catch(function (error) {
-                      console.log(error)
-                    })
+                    fs.unlink(ouPath + '/' + files[0], (err) => {
+                      if (err) throw err;
+                      console.log('successfully deleted ' + ouPath + '/' + files[0]);
+                    });
                   }).catch(function (error) {
                     console.log(error)
+                    fs.unlink(ouPath + '/' + files[0], (err) => {
+                      if (err) throw err;
+                      console.log('successfully deleted ' + ouPath + '/' + files[0]);
+                    });
                   })
-                }
-              })
-            }).catch(function (error) {
-              console.log(error)
+                }).catch(function (error) {
+                  console.log(error)
+                  fs.unlink(ouPath + '/' + files[0], (err) => {
+                    if (err) throw err;
+                    console.log('successfully deleted ' + ouPath + '/' + files[0]);
+                  });
+                })
+              }
             })
+          }).catch(function (error) {
+            console.log(error)
+          })
 
-            if (filename.endsWith('.ts')
+          if (filename.endsWith('.ts')
               || filename.endsWith('.m3u8')
               || filename.endsWith('.mpd')
               || filename.endsWith('.m4s')
               || filename.endsWith('.tmp')) {
-              fs.unlinkSync(ouPath + '/' + filename);
-            }
-          })
+            fs.unlinkSync(ouPath + '/' + filename);
+          }
         }
+
       });
     });
   }
