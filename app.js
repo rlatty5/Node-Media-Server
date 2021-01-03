@@ -43,6 +43,7 @@ const config = {
     secret: AUTHSECRET
   },
 };
+let nms;
 
 //login to API Service
 
@@ -61,8 +62,9 @@ response.json().then(function (data) {
   console.log(os.hostname())
   let token = data.token
   config.token = token
-  let nms = new NodeMediaServer(config)
+  nms = new NodeMediaServer(config)
   nms.run();
+  //nms.stop()
 
   nms.on('preConnect', (id, args) => {
     console.log('[NodeEvent on preConnect]', `id=${id} args=${JSON.stringify(args)}`);
@@ -99,6 +101,7 @@ response.json().then(function (data) {
         "streamKey": streamKey,
         "streamServer": 'http://localhost:8080',
         "isLive": true,
+        "currentSessionId": id,
         "connectionStart": Date.now()
       }),
       headers: {
@@ -148,6 +151,7 @@ response.json().then(function (data) {
       }
     }).then(function (response) {
       console.log(response)
+      //ROMO TODO: Start Transmuxing
     }).catch(function (error) {
       console.log(error)
     })

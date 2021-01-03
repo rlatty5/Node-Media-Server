@@ -90,7 +90,7 @@ class NodeMediaServer {
     }
   }
 
-  getSession(id) {
+  a(id) {
     return context.sessions.get(id);
   }
 }

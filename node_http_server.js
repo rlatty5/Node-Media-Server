@@ -35,6 +35,7 @@ class NodeHttpServer {
     let app = Express();
 
     app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(bodyParser.json());
 
     app.all('*', (req, res, next) => {
       res.header("Access-Control-Allow-Origin", this.config.http.allow_origin);
@@ -43,6 +44,37 @@ class NodeHttpServer {
       res.header("Access-Control-Allow-Credentials", true);
       req.method === "OPTIONS" ? res.sendStatus(200) : next();
     });
+
+    app.post('*.flv', (req, res, next) => {
+      let sesssionId = req.body.sesssionId
+      if(sesssionId == null) {
+        res.status(400).send({
+          errorMessage: 'Session ID is missing'
+        })
+        return
+      }
+      let cmd = req.body.cmd
+      if(cmd == null) {
+        res.status(400).send({
+          errorMessage: 'Command is missing'
+        })
+        return
+      }
+      if(cmd == 'stop') {
+        //ROMO TODO: find session and close it
+        for (let sessionData of context.sessions.entries()) {
+          let sessionIdentifier = sessionData[0]
+          let session = sessionData[1]
+
+          if(sessionIdentifier == sesssionId) {
+            session.stop();
+            return
+          }
+        }
+
+      }
+
+    })
 
     app.get('*.flv', (req, res, next) => {
       let url = req.url
