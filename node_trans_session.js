@@ -104,11 +104,13 @@ class NodeTransSession extends EventEmitter {
             response.json().then(function (data) {
               console.log(data)
               let videoURL = data.url
+              let previewURL = data.videoPreviewUrl
               if(response.status == 200) {
                 fetch('http://localhost:3001/v1/course-content/createVideoArchive', {
                   method: 'POST',
                   body: JSON.stringify({
                     videoURL: videoURL,
+                    previewURL: previewURL,
                     streamKey: streamKey,
                     streamArchiveDate: archiveDate
                   }),

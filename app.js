@@ -143,6 +143,7 @@ response.json().then(function (data) {
         "streamKey": streamKey,
         "streamServer": 'http://localhost:8080',//ROMO TODO: os.hostname()
         "isLive": false,
+        "currentSessionId": id,
         "connectionTerminated": Date.now()
       }),
       headers: {
