@@ -80,75 +80,85 @@ class NodeTransSession extends EventEmitter {
       Logger.log('[Transmuxing end] ' + this.conf.streamPath);
       this.emit('end');
       let token = this.conf.token
+      let didRun = false
       fs.readdir(ouPath, function (err, files) {
-        if (!err && files[0]) {
+        if(didRun) {
+          return
+        }
+        if (!err && files[files.length - 1]) {
           let streamKey = ouPath.split('/').slice(-1)[0]
-          let archiveDate = files[0].split(".")[0]
-          const data = new FormData();
-          //ROMO TODO: Trim video from start to end
-          data.append("upload", fs.createReadStream(ouPath + "/" + files[0]));
-          data.append("streamKey", streamKey)
+          let archiveDate = files[files.length - 1].split(".")[0]
 
-          fs.unlink(ouPath + '/' + files[0], (err) => {
-            if (err) throw err;
-            console.log('successfully deleted ' + ouPath + '/' + files[0]);
-          });
-
-          fetch('http://localhost:3001/v1/course-content/uploadStreamArchive', {
+          fetch('http://localhost:3001/v1/course-content/getStreamData', {
             method: 'POST',
-            body: data,
+            body: JSON.stringify({
+              streamKey: streamKey
+            }),
             headers: {
-              'Authorization': 'Bearer ' + token
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'application/json'
             }
           }).then(function (response) {
-            response.json().then(function (data) {
-              console.log(data)
-              let videoURL = data.url
-              let previewURL = data.videoPreviewUrl
-              if(response.status == 200) {
-                fetch('http://localhost:3001/v1/course-content/createVideoArchive', {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    videoURL: videoURL,
-                    previewURL: previewURL,
-                    streamKey: streamKey,
-                    streamArchiveDate: archiveDate
-                  }),
-                  headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
-                  }
-                }).then(function (response) {
-                  response.json().then(function (data) {
-                    console.log(response)
-                    if(response.status != 200) {
-                      console.log("Video archive process failed: " + data.errorMessage)
-                    } else {
-                      console.log("Video archive process success")
+            response.json().then(function (responseData) {
+              if(responseData['errorMessage']) {
+                console.log('Stream is not active')
+                fs.unlinkSync(ouPath + '/' + files[files.length - 1])
+                return
+              }
+              const data = new FormData();
+              //ROMO TODO: Trim video from start to end
+              data.append("upload", fs.createReadStream(ouPath + "/" + files[files.length - 1]));
+              data.append("streamKey", streamKey)
+              data.append("command", 'TRIM')
+              data.append("fromSeconds", responseData.startTrim)
+
+              //ROMO TODO: unlinkSync
+              fs.unlinkSync(ouPath + '/' + files[files.length - 1])
+
+              fetch('http://localhost:3002/v1/media/command', {
+                method: 'POST',
+                body: data,
+                headers: {
+                  'Authorization': 'Bearer ' + token
+                }
+              }).then(function (response) {
+                response.json().then(function (data) {
+                  console.log(data)
+
+                  let cutVideoUrl = data.cutVideoUrl
+                  let previewImages = data.previewImages
+                  let previewVideoUrl = data.previewVideoUrl
+
+                  fetch('http://localhost:3001/v1/course-content/uploadStreamArchive', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                      videoURL: cutVideoUrl,
+                      previewURL: previewVideoUrl,
+                      thumbnails: previewImages,
+                      streamKey: streamKey,
+                      streamArchiveDate: archiveDate
+                    }),
+                    headers: {
+                      'Authorization': 'Bearer ' + token,
+                      'Content-Type': 'application/json'
                     }
-                    fs.unlink(ouPath + '/' + files[0], (err) => {
-                      if (err) throw err;
-                      console.log('successfully deleted ' + ouPath + '/' + files[0]);
-                    });
+                  }).then(function (response) {
+                    response.json().then(function (data){
+                      console.log(data)
+                    })
                   }).catch(function (error) {
                     console.log(error)
-                    fs.unlink(ouPath + '/' + files[0], (err) => {
-                      if (err) throw err;
-                      console.log('successfully deleted ' + ouPath + '/' + files[0]);
-                    });
                   })
-                }).catch(function (error) {
-                  console.log(error)
-                  fs.unlink(ouPath + '/' + files[0], (err) => {
-                    if (err) throw err;
-                    console.log('successfully deleted ' + ouPath + '/' + files[0]);
-                  });
+
                 })
-              }
+              }).catch(function (error) {
+                console.log(error)
+              })
             })
-          }).catch(function (error) {
-            console.log(error)
           })
+        }
+        if(didRun == false) {
+          didRun = true
         }
 
       });
