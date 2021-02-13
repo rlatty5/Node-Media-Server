@@ -129,7 +129,7 @@ class NodeTransSession extends EventEmitter {
                   let previewImages = data.previewImages
                   let previewVideoUrl = data.previewVideoUrl
 
-                  fetch('http://localhost:3001/v1/course-content/uploadStreamArchive', {
+                  fetch('http://localhost:3001/v1/course-content/createVideoArchive', {
                     method: 'POST',
                     body: JSON.stringify({
                       videoURL: cutVideoUrl,
